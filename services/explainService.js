@@ -33,7 +33,7 @@ PREDICTED PERFORMANCE:
 - Comments: ${typeof comments === 'number' ? comments.toFixed(0) : comments}
 - Shares: ${typeof shares === 'number' ? shares.toFixed(0) : shares}
 - Clicks: ${typeof clicks === 'number' ? clicks.toFixed(0) : clicks}
-- Timing Quality Score: ${typeof timing_quality_score === 'number' ? timing_quality_score.toFixed(2) : timing_quality_score} / 1.0
+- Timing Quality Score: ${typeof timing_quality_score === 'number' ? (timing_quality_score * 100).toFixed(0) + '%' : timing_quality_score} / 100%
 
 Based on these predictions, provide a comprehensive explainability report. Respond ONLY with a JSON object matching this exact schema:
 
