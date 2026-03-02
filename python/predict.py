@@ -22,10 +22,17 @@ MAX_VOCAB = 30000
 
 # Platform map from training data (pandas category codes, sorted alphabetically)
 # {0: 'Facebook', 1: 'Instagram', 2: 'TikTok'}
+# Twitter/YouTube/LinkedIn were not in training set:
+#   Twitter  → mapped to Instagram (short-form, text-driven, similar engagement patterns)
+#   YouTube  → mapped to Facebook  (broad audience, longer-form content)
+#   LinkedIn → mapped to Facebook  (professional, broad reach)
 PLATFORM_MAP = {
     'Facebook':   0,
     'Instagram':  1,
     'TikTok':     2,
+    'Twitter':    1,   # nearest equivalent: Instagram (short text + media)
+    'YouTube':    0,   # nearest equivalent: Facebook (broad audience)
+    'LinkedIn':   0,   # nearest equivalent: Facebook (professional broad reach)
 }
 
 TARGETS = ['likes', 'comments', 'shares', 'clicks', 'timing_quality_score']
