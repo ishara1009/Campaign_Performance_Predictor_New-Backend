@@ -82,7 +82,7 @@ async function callWithFallback(messages, temperature = 0.82) {
     try {
       console.log(`[explainService] Trying provider: ${provider.name}`);
       const result = await callProvider(provider, messages, temperature);
-      console.log(`[explainService] Success with: ${provider.name}`);
+      console.log(`[explainService] Success`);
       return result;
     } catch (err) {
       lastError = err;
@@ -173,7 +173,8 @@ CRITICAL RULES — follow every one without exception:
 5. METRIC IMPROVEMENT: For each metric that is below its benchmark, give a concrete, numbered action with expected uplift percentage.
 6. SINHALA AUDIENCE: Include at least 1 Sinhala or bilingual element in hashtags and recommendations for local reach.
 7. BEST POSTING TIME: Use EXACTLY the days and hours injected — explain the behavioural reason WHY those times work.
-8. Respond ONLY with valid JSON. No markdown, no preamble, no explanation outside JSON.`;
+8. CAPTION & CONTENT EXPLAINABILITY: For the caption_content_explainability section, analyse the EXACT caption and content word-by-word. For every item you suggest adding or improving, state (a) WHAT to add/change with a concrete example, (b) WHY it works — the psychological or algorithmic reason, and (c) the expected metric uplift. Be specific to THIS post — never give generic tips.
+9. Respond ONLY with valid JSON. No markdown, no preamble, no explanation outside JSON.`;
 
   // ── User prompt ───────────────────────────────────────────────────────────
   const userPrompt = `POST FINGERPRINT: ${fingerprint}
@@ -342,6 +343,111 @@ JSON SCHEMA:
       "Second tip directly tied to the actual content description",
       "Third tip about content structure or storytelling for ${category} SMEs"
     ]
+  },
+
+  "caption_content_explainability": {
+    "caption_word_analysis": {
+      "original": "${(caption || 'Not provided').replace(/"/g, "'")}",
+      "what_is_working": [
+        {
+          "element": "Quote the specific word or phrase that is effective",
+          "why_it_works": "Psychological or algorithmic reason this element drives engagement on ${platform}",
+          "impact": "Which metric it positively affects and by roughly how much"
+        }
+      ],
+      "what_is_missing": [
+        {
+          "missing_element": "Specific thing missing from the caption (e.g. emoji, CTA, urgency word, question, offer)",
+          "why_add_it": "Concrete reason why adding this to THIS caption would help — reference the caption topic and ${platform} algorithm",
+          "example": "Show exactly how to add it — provide the modified sentence or addition",
+          "expected_uplift": "e.g. +18% comments, +12% clicks"
+        },
+        {
+          "missing_element": "Second missing element",
+          "why_add_it": "Reason specific to the caption topic",
+          "example": "Concrete example of what to write",
+          "expected_uplift": "Estimated metric improvement"
+        },
+        {
+          "missing_element": "Third missing element",
+          "why_add_it": "Reason specific to ${category} audience in Sri Lanka",
+          "example": "Concrete example",
+          "expected_uplift": "Estimated metric improvement"
+        }
+      ],
+      "improved_versions": [
+        {
+          "version_label": "Engagement-Optimised",
+          "caption": "Rewritten caption with emoji, CTA, and question added — under 220 chars",
+          "changes_made": ["List each change made and WHY"]
+        },
+        {
+          "version_label": "Sales-Focused",
+          "caption": "Rewritten caption focused on driving clicks and conversions — under 220 chars",
+          "changes_made": ["List each change made and WHY"]
+        }
+      ]
+    },
+    "content_word_analysis": {
+      "original": "${(content || 'Not provided').replace(/"/g, "'")}",
+      "what_is_working": [
+        {
+          "element": "Quote the specific word or phrase from the content that is effective",
+          "why_it_works": "Why this resonates with ${platform} audience for ${category}"
+        }
+      ],
+      "what_is_missing": [
+        {
+          "missing_element": "Specific thing missing from the content body (e.g. social proof, scarcity, benefit statement, visual description)",
+          "why_add_it": "Reason why this would improve performance for THIS specific content topic",
+          "example": "Show exactly what sentence or phrase to add",
+          "expected_uplift": "Estimated impact on engagement"
+        },
+        {
+          "missing_element": "Second missing element",
+          "why_add_it": "Reason tied to the content topic",
+          "example": "Concrete addition example",
+          "expected_uplift": "Estimated impact"
+        }
+      ],
+      "improved_versions": [
+        {
+          "version_label": "Trust-Building",
+          "content": "Rewritten content body that adds social proof, benefit statements, and scarcity — builds on the original words",
+          "changes_made": ["List each change and the reason WHY it improves the content"]
+        },
+        {
+          "version_label": "Story-Driven",
+          "content": "Rewritten content using a short narrative or customer scenario — designed for maximum shares",
+          "changes_made": ["List each change and the reason WHY it improves shareability"]
+        }
+      ]
+    },
+    "combined_caption_content_score": {
+      "score": "X/10",
+      "summary": "Overall verdict on how well the caption and content work together — quote specific words from both",
+      "alignment_issue": "Does the caption promise something the content does not deliver? Be specific.",
+      "top_3_priority_actions": [
+        {
+          "rank": 1,
+          "action": "Most impactful single change to caption or content — be very specific with an example",
+          "why": "Exact reason this is the highest priority for THIS post",
+          "expected_impact": "Metric uplift e.g. +35% likes"
+        },
+        {
+          "rank": 2,
+          "action": "Second most impactful change",
+          "why": "Reason tied to this post",
+          "expected_impact": "Metric uplift"
+        },
+        {
+          "rank": 3,
+          "action": "Third most impactful change",
+          "why": "Reason tied to this post",
+          "expected_impact": "Metric uplift"
+        }
+      ]
+    }
   },
 
   "peak_times_analysis": {
