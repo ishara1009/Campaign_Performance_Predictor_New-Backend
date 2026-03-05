@@ -161,20 +161,24 @@ async function generateInsights(data) {
   const behaviourFact = platformBehaviourFacts[platform] || platformBehaviourFacts['Facebook'];
 
   // ── System prompt ─────────────────────────────────────────────────────────
-  const systemPrompt = `You are a senior social media research analyst specialising in Sri Lankan SME digital marketing.
-You conduct evidence-based analysis on social media engagement data collected from Sri Lankan businesses.
-Your role is to explain WHY predictions are what they are, and HOW the SME owner can specifically improve their results.
+  const systemPrompt = `You are a senior digital marketing research scientist specialising in Sri Lankan SME social media performance analysis.
+You produce academic-grade, evidence-based explainability reports that explain every prediction at a deep causal level.
+Your analysis must be rigorous enough to be cited in a university research paper on AI explainability in marketing.
 
 CRITICAL RULES — follow every one without exception:
-1. CONTENT SPECIFICITY: Quote actual words or phrases from the caption and content in EVERY insight. Generic advice is forbidden.
-2. PEAK TIME REASONING: Explain WHY each recommended day and hour gets more engagement — reference audience behaviour patterns, not the research dataset directly.
-3. VIRAL HASHTAGS: Suggest 9–12 hashtags that are (a) specific to the caption topic, (b) trending on ${platform} in Sri Lanka, and (c) a mix of broad-reach + niche + Sinhala hashtags. Do NOT use hashtags already in the caption.
-4. RECOMMENDATIONS UNIQUENESS: Every recommendation must reference at least one specific word/phrase from this post. No copy-paste advice across posts.
-5. METRIC IMPROVEMENT: For each metric that is below its benchmark, give a concrete, numbered action with expected uplift percentage.
-6. SINHALA AUDIENCE: Include at least 1 Sinhala or bilingual element in hashtags and recommendations for local reach.
-7. BEST POSTING TIME: Use EXACTLY the days and hours injected — explain the behavioural reason WHY those times work.
-8. CAPTION & CONTENT EXPLAINABILITY: For the caption_content_explainability section, analyse the EXACT caption and content word-by-word. For every item you suggest adding or improving, state (a) WHAT to add/change with a concrete example, (b) WHY it works — the psychological or algorithmic reason, and (c) the expected metric uplift. Be specific to THIS post — never give generic tips.
-9. Respond ONLY with valid JSON. No markdown, no preamble, no explanation outside JSON.`;
+1. CONTENT SPECIFICITY: Quote actual words or phrases from the caption and content in EVERY insight. Generic advice is strictly forbidden — every sentence must reference THIS specific post.
+2. CAUSAL DEPTH: For every metric prediction, explain the ROOT CAUSE (what signals in the post drive the number) and the MECHANISM (the causal chain: signal → algorithm → user behaviour → metric outcome).
+3. PSYCHOLOGICAL GROUNDING: Identify every psychological trigger present or missing in the caption and content. Name the principle (e.g. Cialdini's Scarcity, Social Proof, Authority) and explain how it applies to THIS post.
+4. LINGUISTIC ANALYSIS: Analyse the caption and content for tone, sentiment, language mix (Sinhala/English ratio), readability, and emotional resonance — all referenced to actual words.
+5. STRUCTURAL SCORING: Score each element of the caption (hook strength, CTA clarity, emoji, urgency, question, hashtag placement) on a 0–10 scale with a reason.
+6. PEAK TIME REASONING: Explain WHY each recommended day and hour gets more engagement — reference Sri Lankan audience behaviour patterns, weekly routines, and pay cycles.
+7. VIRAL HASHTAGS: Suggest 9–12 hashtags — (a) specific to the caption topic, (b) trending on ${platform} in Sri Lanka, (c) mix of broad-reach + niche + Sinhala. Do NOT use hashtags already in the caption.
+8. ENGAGEMENT BARRIERS: Identify specific friction points that prevent users from engaging — cognitive load, missing urgency, unclear value proposition, etc.
+9. COMPETITIVE CONTEXT: Explain how this post compares to top-performing posts in the ${category} category on ${platform} in Sri Lanka.
+10. PLATFORM ALGORITHM: For platform tips, explain the specific algorithmic mechanism (reach decay, engagement window, distribution boost) that makes each tip effective.
+11. SINHALA AUDIENCE: Include at least 1 Sinhala or bilingual element in hashtags, examples, and recommendations for local reach.
+12. NOVELTY: Provide one non-obvious, counterintuitive research insight specific to THIS post.
+13. Respond ONLY with valid JSON. No markdown, no preamble, no explanation outside JSON.`;
 
   // ── User prompt ───────────────────────────────────────────────────────────
   const userPrompt = `POST FINGERPRINT: ${fingerprint}
@@ -240,38 +244,99 @@ TIMING UPLIFT — if moved to peak window
 
 ════════════════════════════════════════
 YOUR TASK: Generate ONLY valid JSON matching the schema below.
-ALL fields are mandatory. Be specific — quote actual caption/content words.
+ALL fields are mandatory. Be specific — quote actual caption/content words. Write like a research paper.
 ════════════════════════════════════════
 
 JSON SCHEMA:
 {
-  "overall_assessment": "3 sentences: (1) what this specific caption/content signals and its predicted performance level; (2) comparison to benchmarks with numbers; (3) biggest single improvement opportunity",
+  "overall_assessment": "4–5 sentences: (1) what this specific caption/content signals and its predicted performance level with numbers; (2) comparison to benchmarks with exact figures; (3) the primary causal driver of this performance level — reference the caption/content directly; (4) the single biggest improvement opportunity with quantified expected gain; (5) research context for this type of post in Sri Lankan SME marketing",
 
   "performance_level": "Low | Moderate | Good | Excellent",
+
+  "linguistic_analysis": {
+    "tone": "One of: Informative | Promotional | Emotional | Urgent | Conversational | Inspirational",
+    "tone_explanation": "Why this tone is present — quote the specific words that set the tone. Is this tone optimal for ${category} on ${platform}? What tone would perform better and why?",
+    "sentiment": "Positive | Neutral | Negative",
+    "sentiment_impact": "How the detected sentiment statistically influences engagement probability for ${category} posts. Reference the specific words that carry sentiment polarity.",
+    "language_mix": "e.g. 80% English, 20% Sinhala — quote the Sinhala words found. What is the ideal mix for ${platform} in Sri Lanka and why?",
+    "readability_verdict": "Easy / Moderate / Complex — explain why by referencing specific phrases. What is the Flesch-Kincaid grade level equivalent and does it match the target audience literacy level?",
+    "bilingual_effectiveness": "Does the current Sinhala/English mix maximise reach? Explain the code-switching effect on Sri Lankan audience engagement — reference specific bilingual phrases if present.",
+    "keyword_density": "What are the 3 most prominent keyword themes in the caption/content? Are they algorithmically relevant for ${platform} ${category} search/discovery? Quote the keywords."
+  },
+
+  "psychological_triggers": {
+    "present": [
+      {
+        "trigger": "Name of psychological principle (e.g. Social Proof, Scarcity, Authority, Reciprocity, Liking, Unity)",
+        "evidence": "Quote the exact word or phrase from caption/content that activates this trigger",
+        "strength": "Strong | Moderate | Weak",
+        "strength_reason": "Why this trigger fires at this strength — what is missing that would make it stronger?",
+        "metric_impact": "Which specific metric this trigger increases and by approximately how much"
+      }
+    ],
+    "missing": [
+      {
+        "trigger": "Name of missing psychological principle",
+        "why_it_matters": "Explain the psychological mechanism — why does THIS trigger increase engagement for THIS type of post?",
+        "how_to_add": "Exact example sentence of how to incorporate it into this caption or content — must build on the existing words",
+        "expected_uplift": "Estimated metric improvement e.g. +28% comments, +15% shares"
+      },
+      {
+        "trigger": "Second missing trigger",
+        "why_it_matters": "Psychological mechanism specific to ${category} audience",
+        "how_to_add": "Exact example sentence",
+        "expected_uplift": "Estimated impact"
+      },
+      {
+        "trigger": "Third missing trigger",
+        "why_it_matters": "Why this matters specifically for Sri Lankan SME ${category} context",
+        "how_to_add": "Concrete example in the context of this caption",
+        "expected_uplift": "Estimated impact"
+      }
+    ]
+  },
+
+  "engagement_psychology": {
+    "current_motivation": "What psychological motivation does this post currently activate? (e.g. curiosity, aspiration, FOMO, desire) — quote the triggering words",
+    "friction_points": "What specific psychological barriers prevent users from engaging? List each friction point with the exact element in the caption/content causing it (e.g. 'No urgency word — reader can delay action indefinitely')",
+    "desired_action": "What action does the post want the reader to take? Is the post explicitly and clearly asking for it? Quote the CTA or explain why it is absent.",
+    "cognitive_load": "How much mental effort is required to understand and act on this post? Is the message clear in under 3 seconds? Reference specific complex phrases if any.",
+    "emotional_hook": "What emotion does this post evoke? (excitement, trust, curiosity, desire, community) Is this the optimal emotion for driving ${metric} engagement on ${platform}? Quote the emotional trigger words."
+  },
 
   "predicted_metrics_analysis": {
     "likes": {
       "value": ${likesVal},
-      "vs_benchmark": "${vsAvgLikes} average",
-      "explanation": "Why this post gets this many likes — reference caption/content signals and timing"
+      "vs_benchmark": "${vsAvgLikes} average by ${Math.abs(likesVal - DATASET_AVERAGES.likes).toLocaleString()}",
+      "root_cause": "The primary signal in this post that drives the likes prediction to this level — quote the specific caption/content element responsible",
+      "mechanism": "Causal chain: [caption/content signal] → [user psychological response] → [${platform} algorithm behaviour] → [likes outcome]",
+      "explanation": "Full explanation referencing caption/content signals, timing, and follower count"
     },
     "comments": {
       "value": ${commentsVal},
       "vs_benchmark": "${vsAvgComments} average",
-      "explanation": "Why this comment count — reference whether caption asks a question or has CTA"
+      "root_cause": "Why this comment count — is there a question, debate trigger, or community hook? Quote or explain the absence.",
+      "mechanism": "Causal chain from caption structure to comment behaviour on ${platform}",
+      "explanation": "Full explanation referencing question presence, CTA clarity, and community engagement signals"
     },
     "shares": {
       "value": ${sharesVal},
-      "explanation": "Why shares are at this level — reference content shareability signals"
+      "root_cause": "What makes or prevents sharing of this specific content — quote the shareability signal or identify what is missing",
+      "mechanism": "Causal chain: [shareability signal] → [social identity motivation] → [share action]",
+      "explanation": "Why shares are at this level — reference content value, novelty, and format"
     },
     "clicks": {
       "value": ${clicksVal},
       "vs_benchmark": "${vsAvgClicks} average",
-      "explanation": "Why this click count — reference CTA presence, ad boost status, content length"
+      "root_cause": "Why this click count — is there a CTA, link reference, ad boost? Quote or explain absence.",
+      "mechanism": "Causal chain from CTA/content → curiosity/intent → click action on ${platform}",
+      "explanation": "Full explanation referencing CTA presence, ad boost status, content length, and link visibility"
     },
     "timing_quality_score": {
       "value": "${tqsPercent}%",
-      "explanation": "Explain why the TQS is ${tqsPercent}% based on the actual posting day (${timingAnalysis.dayName}) and hour (${timingAnalysis.hour}:00) vs peak window"
+      "root_cause": "Why the TQS is ${tqsPercent}% — what is the posting day/hour contributing or failing to contribute?",
+      "mechanism": "How posting time affects ${platform} algorithm distribution window and audience active-session overlap",
+      "explanation": "Detailed explanation based on ${timingAnalysis.dayName} at ${timingAnalysis.hour}:00 vs peak window — quantify the audience availability gap"
     }
   },
 
@@ -279,69 +344,86 @@ JSON SCHEMA:
     {
       "metric": "Likes",
       "current_score": "${likesVal.toLocaleString()} likes",
-      "potential_score": "estimated after improvements",
+      "potential_score": "Estimated after all improvements applied",
+      "root_cause": "The primary reason likes are at ${likesVal} — reference specific caption/content elements",
       "improvement_tips": [
-        "Tip 1 quoting a word from the caption — what to add/change with expected % uplift",
-        "Tip 2: hashtag or emoji gap — specific to this post content with numbers",
-        "Tip 3: Sri Lanka-specific tactic for ${category} businesses (e.g. reference local events, pay-day cycles, festivals)"
+        "Tip 1 — quote a specific word from the caption — state WHAT to change, HOW to change it with an example, WHY it works (psychological/algorithmic reason), and expected % uplift",
+        "Tip 2 — hashtag or emoji gap — specific to this post content with exact numbers and expected likes gain",
+        "Tip 3 — Sri Lanka-specific tactic for ${category} businesses referencing local events, pay-day cycles (25th of month), or festivals (Avurudu, Vesak, Poson)"
       ]
     },
     {
       "metric": "Comments",
       "current_score": "${commentsVal.toLocaleString()} comments",
-      "potential_score": "estimated after improvements",
+      "potential_score": "Estimated after all improvements",
+      "root_cause": "The specific structural reason this post generates/fails to generate comments — quote the caption",
       "improvement_tips": [
-        "Tip 1: specific question to add based on the caption topic",
-        "Tip 2: engagement hook tied to content",
-        "Tip 3: community/reply strategy for ${category}"
+        "Tip 1 — specific question to add based on the caption topic with the exact question text and expected comment uplift %",
+        "Tip 2 — engagement hook or debate trigger tied to the actual content with example text",
+        "Tip 3 — community/reply strategy for ${category} on ${platform} in Sri Lanka with a concrete example"
       ]
     },
     {
       "metric": "Shares",
       "current_score": "${sharesVal.toLocaleString()} shares",
-      "potential_score": "estimated after improvements",
+      "potential_score": "Estimated after all improvements",
+      "root_cause": "Why this content is/is not share-worthy — reference what sharing motivation is missing",
       "improvement_tips": [
-        "Tip 1: what makes this specific content more shareable",
-        "Tip 2: format change (reel/carousel/story) with expected share uplift",
-        "Tip 3: incentive or viral hook tied to the caption topic"
+        "Tip 1 — what makes this specific content more shareable, referencing the exact content topic",
+        "Tip 2 — format change recommendation (Reel/Carousel/Story) with specific expected share uplift % and why that format drives shares",
+        "Tip 3 — incentive or viral hook tied directly to the caption topic with example text"
       ]
     },
     {
       "metric": "Clicks",
       "current_score": "${clicksVal.toLocaleString()} clicks",
-      "potential_score": "estimated after improvements",
+      "potential_score": "Estimated after all improvements",
+      "root_cause": "Why clicks are at this level — reference CTA presence/absence and link visibility directly",
       "improvement_tips": [
-        "Tip 1: CTA improvement referencing the specific caption",
-        "Tip 2: link placement strategy for ${platform}",
-        "Tip 3: ad boost or targeting tip for ${category} in Sri Lanka with LKR budget range"
+        "Tip 1 — CTA improvement referencing the specific caption wording with before/after example and expected % uplift",
+        "Tip 2 — link placement strategy specific to ${platform} algorithm behaviour with step-by-step instruction",
+        "Tip 3 — ad boost or targeting tip for ${category} in Sri Lanka with specific LKR daily budget range and expected clicks gain"
       ]
     },
     {
       "metric": "Timing Quality Score",
       "current_score": "${tqsPercent}%",
       "potential_score": "Up to 82% at peak window",
+      "root_cause": "Why TQS is ${tqsPercent}% — what the combination of ${timingAnalysis.dayName} and ${timingAnalysis.hour}:00 means for audience availability on ${platform}",
       "improvement_tips": [
-        "Explain WHY moving to the recommended days increases TQS — audience behaviour reason",
-        "Explain WHY the recommended hours are peak — what Sri Lankan audiences are doing then",
-        "Scheduling tip: how to use scheduling tools for this ${category} post on ${platform}"
+        "Explain WHY moving to the recommended days increases TQS to 82% — cite the specific audience behaviour pattern on those days (e.g. after-work routine, weekend leisure, weekly planning)",
+        "Explain WHY the recommended hours are peak — what are Sri Lankan ${platform} users specifically doing during those hours, and why is that activity state optimal for ${category} content",
+        "Provide a scheduling workflow: which ${platform} scheduling tool to use, when to set the post live, and why this ${category} content benefits from consistent peak-time posting over 30 days"
       ]
     }
   ],
 
   "caption_analysis": {
     "score": "X/10",
-    "strengths": ["what is working in the current caption — quote specific words"],
-    "weaknesses": ["what is missing — emoji, CTA, question, pricing signal"],
-    "rewritten_caption": "Improved version of the caption that quotes/builds on the existing words, adds missing elements, stays under 220 characters"
+    "structural_scoring": {
+      "hook_strength": "X/10 — are the first 3–5 words attention-grabbing? Quote them and explain why they work or fail",
+      "cta_clarity": "X/10 — how clear and direct is the call-to-action? Quote it or explain its absence",
+      "emoji_usage": "X/10 — are emojis used effectively? Quote or note absence and explain the 12–18% engagement lift opportunity",
+      "urgency_level": "X/10 — is there time pressure or scarcity language? Quote or explain what is missing",
+      "question_engagement": "X/10 — does the caption ask a question? Quote it or explain the 32% comment-boost opportunity missed",
+      "hashtag_placement": "X/10 — are hashtags appropriate in count and placed correctly for ${platform}?"
+    },
+    "strengths": ["Quote the specific words or phrases that are working and explain WHY each one is effective"],
+    "weaknesses": ["Quote or identify each specific gap — emoji: present/absent; CTA: present/absent; question: present/absent; urgency: present/absent; pricing: present/absent — with expected impact of each fix"],
+    "language_effectiveness": "Analyse the Sinhala/English mix in the caption. Does code-switching enhance or reduce clarity for the target ${category} audience in Sri Lanka? Quote specific bilingual phrases and rate their effectiveness.",
+    "rewritten_caption": "Improved version of the caption that quotes/builds on the existing words, adds missing elements (emoji, CTA, question, urgency), under 220 characters"
   },
 
   "content_analysis": {
     "score": "X/10",
-    "current_length_verdict": "${textStats.contentChars} chars — verdict and ideal target",
+    "current_length_verdict": "${textStats.contentChars} characters — is this optimal? State the ideal range for ${category} on ${platform} and why",
+    "storytelling_analysis": "Does the content tell a story? What narrative structure is present or missing? Reference the actual content words and explain what narrative arc would increase shares.",
+    "value_proposition": "Is the value clearly communicated to the ${category} audience? What is the reader gaining from this post? Quote the value statement or explain why it is absent.",
+    "visual_content_recommendation": "What specific type of image or video should accompany this content for maximum engagement? Explain why this format works for ${category} on ${platform} with an expected engagement uplift.",
     "improvement_tips": [
-      "Specific visual/format improvement for this ${category} content on ${platform}",
-      "Second tip directly tied to the actual content description",
-      "Third tip about content structure or storytelling for ${category} SMEs"
+      "Specific visual/format improvement for this ${category} content on ${platform} — include a concrete example and expected % uplift",
+      "Second tip directly tied to the actual content description with before/after example",
+      "Third tip about content structure or storytelling for ${category} SMEs in Sri Lanka — include a cultural or local context angle"
     ]
   },
 
@@ -351,40 +433,50 @@ JSON SCHEMA:
       "what_is_working": [
         {
           "element": "Quote the specific word or phrase that is effective",
-          "why_it_works": "Psychological or algorithmic reason this element drives engagement on ${platform}",
-          "impact": "Which metric it positively affects and by roughly how much"
+          "why_it_works": "The psychological or algorithmic reason this element drives engagement — name the principle (e.g. Specificity Bias, Authority Cue, Emotional Resonance)",
+          "impact": "Which metric it positively affects and by approximately how much, and why"
+        },
+        {
+          "element": "Second effective element — quote it",
+          "why_it_works": "Reason with named psychological/algorithmic principle",
+          "impact": "Metric affected and estimated magnitude"
         }
       ],
       "what_is_missing": [
         {
-          "missing_element": "Specific thing missing from the caption (e.g. emoji, CTA, urgency word, question, offer)",
-          "why_add_it": "Concrete reason why adding this to THIS caption would help — reference the caption topic and ${platform} algorithm",
-          "example": "Show exactly how to add it — provide the modified sentence or addition",
-          "expected_uplift": "e.g. +18% comments, +12% clicks"
+          "missing_element": "Specific missing element (e.g. urgency word, emoji, CTA, price anchor, social proof)",
+          "why_add_it": "Deep reason — explain the psychological mechanism and the ${platform} algorithm signal, tied to THIS caption topic",
+          "example": "Show exactly how to add it — provide the modified caption sentence with the element inserted",
+          "expected_uplift": "e.g. +22% comments, +15% clicks — explain why this magnitude"
         },
         {
           "missing_element": "Second missing element",
-          "why_add_it": "Reason specific to the caption topic",
-          "example": "Concrete example of what to write",
-          "expected_uplift": "Estimated metric improvement"
+          "why_add_it": "Mechanism specific to the caption topic and ${category} audience",
+          "example": "Concrete example sentence building on the existing caption words",
+          "expected_uplift": "Estimated metric improvement with reason"
         },
         {
           "missing_element": "Third missing element",
-          "why_add_it": "Reason specific to ${category} audience in Sri Lanka",
-          "example": "Concrete example",
+          "why_add_it": "Reason specific to ${category} Sri Lankan audience cultural context",
+          "example": "Concrete bilingual or culturally-resonant example",
           "expected_uplift": "Estimated metric improvement"
         }
       ],
       "improved_versions": [
         {
           "version_label": "Engagement-Optimised",
-          "caption": "Rewritten caption with emoji, CTA, and question added — under 220 chars",
-          "changes_made": ["List each change made and WHY"]
+          "caption": "Rewritten caption adding emoji, CTA, and question — under 220 chars — must quote/build on existing words",
+          "changes_made": ["Change 1: what was added/changed and the exact psychological/algorithmic reason WHY it improves engagement", "Change 2: same format", "Change 3: same format"]
         },
         {
           "version_label": "Sales-Focused",
-          "caption": "Rewritten caption focused on driving clicks and conversions — under 220 chars",
-          "changes_made": ["List each change made and WHY"]
+          "caption": "Rewritten caption focused on driving clicks and conversions — under 220 chars — must quote/build on existing words",
+          "changes_made": ["Change 1: what was added/changed and WHY it drives more clicks", "Change 2: same format"]
+        },
+        {
+          "version_label": "Sinhala-Boosted",
+          "caption": "Rewritten caption with additional Sinhala phrases to maximise local Sri Lankan reach — under 220 chars",
+          "changes_made": ["Change 1: what Sinhala element was added and WHY it increases reach with local audience", "Change 2: same format"]
         }
       ]
     },
@@ -393,58 +485,65 @@ JSON SCHEMA:
       "what_is_working": [
         {
           "element": "Quote the specific word or phrase from the content that is effective",
-          "why_it_works": "Why this resonates with ${platform} audience for ${category}"
+          "why_it_works": "Why this resonates with ${platform} ${category} audience — name the principle",
+          "impact": "Which metric is positively affected"
         }
       ],
       "what_is_missing": [
         {
-          "missing_element": "Specific thing missing from the content body (e.g. social proof, scarcity, benefit statement, visual description)",
-          "why_add_it": "Reason why this would improve performance for THIS specific content topic",
-          "example": "Show exactly what sentence or phrase to add",
-          "expected_uplift": "Estimated impact on engagement"
+          "missing_element": "Specific missing element (social proof, scarcity, benefit statement, visual description, local reference)",
+          "why_add_it": "Deep reason — psychological mechanism why this would improve performance for THIS specific content topic",
+          "example": "Exact sentence or phrase to add, building on the existing content words",
+          "expected_uplift": "Estimated engagement impact with reason"
         },
         {
           "missing_element": "Second missing element",
-          "why_add_it": "Reason tied to the content topic",
-          "example": "Concrete addition example",
+          "why_add_it": "Mechanism tied to the content topic and ${category} context",
+          "example": "Concrete addition building on existing content",
+          "expected_uplift": "Estimated impact"
+        },
+        {
+          "missing_element": "Third missing element",
+          "why_add_it": "Cultural or local Sri Lankan context reason",
+          "example": "Example with bilingual or cultural element",
           "expected_uplift": "Estimated impact"
         }
       ],
       "improved_versions": [
         {
           "version_label": "Trust-Building",
-          "content": "Rewritten content body that adds social proof, benefit statements, and scarcity — builds on the original words",
-          "changes_made": ["List each change and the reason WHY it improves the content"]
+          "content": "Rewritten content adding social proof, benefit statements, and scarcity — must build on the original words",
+          "changes_made": ["Change 1: what was added and the psychological reason it builds trust and drives engagement", "Change 2: same format", "Change 3: same format"]
         },
         {
           "version_label": "Story-Driven",
-          "content": "Rewritten content using a short narrative or customer scenario — designed for maximum shares",
-          "changes_made": ["List each change and the reason WHY it improves shareability"]
+          "content": "Rewritten content using a short narrative or customer scenario for maximum shares — build on original words",
+          "changes_made": ["Change 1: what narrative element was added and WHY it improves shareability", "Change 2: same format"]
         }
       ]
     },
     "combined_caption_content_score": {
       "score": "X/10",
-      "summary": "Overall verdict on how well the caption and content work together — quote specific words from both",
-      "alignment_issue": "Does the caption promise something the content does not deliver? Be specific.",
+      "summary": "Overall verdict on how well the caption and content work together — quote specific words from both and explain the synergy or misalignment",
+      "alignment_issue": "Does the caption promise something the content does not deliver, or vice versa? Be specific — quote both the caption and content to demonstrate the gap.",
       "top_3_priority_actions": [
         {
           "rank": 1,
-          "action": "Most impactful single change to caption or content — be very specific with an example",
-          "why": "Exact reason this is the highest priority for THIS post",
-          "expected_impact": "Metric uplift e.g. +35% likes"
+          "action": "Most impactful single change to caption or content — be very specific with a before/after example quoting actual words",
+          "why": "Exact causal reason this is the highest-priority action for THIS post — reference the metric it most impacts",
+          "expected_impact": "Quantified metric uplift e.g. +38% likes — explain why this magnitude"
         },
         {
           "rank": 2,
-          "action": "Second most impactful change",
-          "why": "Reason tied to this post",
-          "expected_impact": "Metric uplift"
+          "action": "Second most impactful change with before/after example",
+          "why": "Causal reason tied to this post's specific gaps",
+          "expected_impact": "Quantified metric uplift with reason"
         },
         {
           "rank": 3,
-          "action": "Third most impactful change",
-          "why": "Reason tied to this post",
-          "expected_impact": "Metric uplift"
+          "action": "Third most impactful change with before/after example",
+          "why": "Causal reason tied to this post",
+          "expected_impact": "Quantified metric uplift with reason"
         }
       ]
     }
@@ -453,70 +552,100 @@ JSON SCHEMA:
   "peak_times_analysis": {
     "recommended_days": ${JSON.stringify(bestWindow.days)},
     "recommended_hours": "${bestWindow.hours}",
-    "why_these_days": "Explain the audience behaviour reason WHY ${bestWindow.days[0]} and ${bestWindow.days[1]} are peak days for ${platform} — reference what Sri Lankan users are doing on those days (weekly routine, leisure patterns, pay cycles, etc.)",
-    "why_these_hours": "Explain the behaviour reason WHY ${peakHourRange} is the peak hour window — what are ${platform} users in Sri Lanka doing at this time (e.g. after-work relaxation, evening scrolling, family time)",
+    "why_these_days": "Detailed audience behaviour explanation for WHY ${bestWindow.days[0]} and ${bestWindow.days[1]} are peak days on ${platform} in Sri Lanka — reference specific weekly routines, leisure patterns, pay cycles, and screen time habits that drive higher engagement on these days vs others",
+    "why_these_hours": "Detailed explanation of WHY the ${peakHourRange} window is peak on ${platform} in Sri Lanka — what are users doing during this time (after-work relaxation, family meals, evening scroll), why that mental state makes them more receptive to ${category} content, and what happens to engagement outside this window",
+    "missed_opportunity_cost": "What engagement is this post missing by being posted at ${timingAnalysis.dayName} ${timingAnalysis.hour}:00 instead of the optimal window? Quantify the estimated likes, clicks, and TQS difference.",
     "category_timing_note": "${bestWindow.reasoning.replace(/"/g, "'")}",
-    "current_vs_optimal": "Compare current posting time (${timingAnalysis.dayName} ${timingAnalysis.hour}:00) to the optimal window and quantify the engagement gap"
+    "current_vs_optimal": "Side-by-side comparison: current schedule (${timingAnalysis.dayName} ${timingAnalysis.hour}:00, TQS: ${tqsPercent}%) vs optimal window — quantify the full engagement gap across all metrics"
   },
 
   "viral_hashtags": {
-    "explanation": "Why these hashtags will increase reach for this specific post",
-    "broad_reach": ["#tag1", "#tag2", "#tag3 — 3 high-volume hashtags relevant to this caption topic"],
-    "niche_targeted": ["#tag4", "#tag5", "#tag6 — 3 niche hashtags specific to ${category} in Sri Lanka"],
-    "local_sinhala": ["#tag7", "#tag8 — 1-2 Sinhala or bilingual hashtags for local Sri Lankan audience"],
-    "platform_trending": ["#tag9", "#tag10 — 2 currently trending ${platform} hashtags for ${category}"],
+    "explanation": "Why these hashtags will increase reach for this specific post — explain the hashtag discovery mechanism on ${platform} for ${category} content",
+    "broad_reach": ["#tag1 — brief reason why high-volume", "#tag2 — brief reason", "#tag3 — brief reason"],
+    "niche_targeted": ["#tag4 — specific to ${category} Sri Lanka with reason", "#tag5 — same", "#tag6 — same"],
+    "local_sinhala": ["#tag7 — Sinhala hashtag with transliteration and reach reason", "#tag8 — same"],
+    "platform_trending": ["#tag9 — currently trending ${platform} hashtag for ${category} with reason", "#tag10 — same"],
     "all_hashtags": ["#tag1", "#tag2", "#tag3", "#tag4", "#tag5", "#tag6", "#tag7", "#tag8", "#tag9", "#tag10", "#tag11", "#tag12"],
-    "usage_tip": "How to place these hashtags in the post for maximum ${platform} algorithm reach"
+    "usage_tip": "Step-by-step instruction on where to place these hashtags in the ${platform} post for maximum algorithm reach — include advice on caption vs comment placement for ${platform}"
   },
 
   "recommendations": [
     {
       "priority": "HIGH",
-      "title": "Short action title specific to this post",
-      "action": "Step-by-step instruction that quotes the caption/content and gives expected metric uplift with percentage",
-      "expected_impact": "Quantified improvement e.g. +45% likes, +2× clicks"
+      "title": "Short action title referencing THIS post's specific gap",
+      "action": "Step-by-step instruction quoting the caption/content with before/after example and expected metric uplift with percentage",
+      "expected_impact": "Quantified improvement e.g. +48% likes, +2.3× clicks — explain the causal mechanism"
     },
     {
       "priority": "HIGH",
       "title": "Second high-priority action",
-      "action": "Specific action tied to this post's gaps",
+      "action": "Specific action tied to this post's gaps with step-by-step instruction and example",
+      "expected_impact": "Quantified improvement with mechanism"
+    },
+    {
+      "priority": "HIGH",
+      "title": "Third high-priority action",
+      "action": "Timing or hashtag optimisation with specific implementation steps",
       "expected_impact": "Quantified improvement"
     },
     {
       "priority": "MEDIUM",
-      "title": "Medium-priority improvement",
-      "action": "Caption or content specific improvement",
+      "title": "Medium-priority caption or content improvement",
+      "action": "Specific improvement with example tied to the post topic",
       "expected_impact": "Expected uplift"
     },
     {
       "priority": "MEDIUM",
-      "title": "Timing optimisation",
-      "action": "Move this post to the recommended window — explain why with audience behaviour",
-      "expected_impact": "TQS up to 82%, estimated engagement increase"
+      "title": "Format or visual upgrade",
+      "action": "Recommendation on post format change (Reel/Carousel/Story) specific to this ${category} content on ${platform}",
+      "expected_impact": "Expected engagement improvement"
     },
     {
       "priority": "LOW",
-      "title": "Long-term strategy tip",
-      "action": "One long-term brand-building recommendation specific to ${category} on ${platform} in Sri Lanka",
-      "expected_impact": "Compounding engagement growth over 30–60 days"
+      "title": "Long-term brand strategy",
+      "action": "One long-term brand-building recommendation for ${category} on ${platform} in Sri Lanka — reference a compounding strategy tied to the post topic",
+      "expected_impact": "Compounding engagement growth over 30–60 days with estimated trajectory"
     }
   ],
 
   "ad_boost_strategy": {
-    "should_boost": ${isAdBoosted ? '"Already boosted — optimise targeting"' : '"Yes — significant ROI opportunity"'},
-    "recommended_budget_lkr": "Specific LKR daily/weekly budget range for ${category} SME",
-    "target_audience": "Detailed targeting parameters: age, location, interests specific to ${category} in Sri Lanka",
-    "expected_roi": "Projected metric improvements with boost vs without",
-    "boost_timing": "When to activate boost relative to the peak posting window"
+    "should_boost": ${isAdBoosted ? '"Already boosted — optimise targeting"' : '"Yes — high ROI opportunity for this post"'},
+    "recommended_budget_lkr": "Specific LKR daily and weekly budget range for a ${category} SME — explain why this range maximises ROI vs overspend",
+    "target_audience": "Detailed targeting parameters: age range, gender split, location (city/region), interests, behaviours — all specific to ${category} in Sri Lanka and grounded in this post's content",
+    "expected_roi": "Projected metric improvements with boost vs without — use the 7.1× likes / 4.6× clicks multiplier and show the calculation",
+    "boost_timing": "Exactly when to activate the boost relative to the peak posting window and why — include how many hours before peak to launch"
   },
 
   "platform_specific_tips": [
-    "Specific ${platform} algorithm tip for ${category} posts — reference the actual caption",
-    "Second ${platform} feature to use (Reels/Stories/Carousel/Live) with data-backed engagement number",
-    "Third ${platform} growth tactic specific to Sri Lankan ${category} audience"
+    {
+      "tip": "Short tip title",
+      "detail": "Full explanation of what to do — reference the actual caption and content",
+      "algorithm_reason": "The specific ${platform} algorithm mechanism that makes this tip effective — e.g. reach decay window, engagement velocity, content distribution boost",
+      "implementation": "Step-by-step how to implement this on ${platform}",
+      "expected_impact": "Metric improvement estimate"
+    },
+    {
+      "tip": "Second tip title",
+      "detail": "Full explanation referencing actual post elements",
+      "algorithm_reason": "Specific algorithm mechanism",
+      "implementation": "Step-by-step implementation",
+      "expected_impact": "Metric improvement estimate"
+    },
+    {
+      "tip": "Third tip title",
+      "detail": "Sri Lankan ${category} audience-specific tactic",
+      "algorithm_reason": "Algorithm or cultural mechanism",
+      "implementation": "Step-by-step implementation",
+      "expected_impact": "Metric improvement estimate"
+    }
   ],
 
-  "novelty_insight": "One unique, non-obvious research insight about THIS specific post (quote the caption directly) that the average Sri Lankan SME would not know — something counterintuitive or data-driven that provides real competitive advantage"
+  "novelty_insight": {
+    "insight": "One unique, counterintuitive research finding about THIS specific post — quote the caption directly",
+    "research_basis": "What data pattern or behavioural research supports this insight — be specific about what makes it non-obvious",
+    "application": "Exactly how to apply this insight to THIS post — give a concrete example with the caption/content words",
+    "competitive_advantage": "How applying this insight gives this ${category} SME an edge over competitors who do not know it — quantify if possible"
+  }
 }`;
 
   // ── Call AI with fallback chain ─────────────────────────────────────────────
@@ -554,6 +683,30 @@ JSON SCHEMA:
   // Keep legacy hashtag_suggestions field for backwards compatibility
   if (!parsed.hashtag_suggestions && parsed.viral_hashtags?.all_hashtags) {
     parsed.hashtag_suggestions = parsed.viral_hashtags.all_hashtags.slice(0, 9);
+  }
+
+  // Normalise platform_specific_tips — new schema returns objects; keep both shapes
+  if (Array.isArray(parsed.platform_specific_tips) && parsed.platform_specific_tips.length > 0) {
+    if (typeof parsed.platform_specific_tips[0] === 'string') {
+      // Old string format — wrap into objects for the new frontend
+      parsed.platform_specific_tips = parsed.platform_specific_tips.map((tip, i) => ({
+        tip: `Tip ${i + 1}`,
+        detail: tip,
+        algorithm_reason: '',
+        implementation: '',
+        expected_impact: '',
+      }));
+    }
+  }
+
+  // Normalise novelty_insight — new schema returns an object; keep string fallback
+  if (typeof parsed.novelty_insight === 'string') {
+    parsed.novelty_insight = {
+      insight: parsed.novelty_insight,
+      research_basis: '',
+      application: '',
+      competitive_advantage: '',
+    };
   }
 
   return parsed;
