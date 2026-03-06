@@ -27,6 +27,10 @@ build/
 .DS_Store
 Thumbs.db
 
+# SSH / PEM keys — NEVER commit private keys
+*.pem
+*.key
+
 # IDE / Editor
 .vscode/
 .idea/

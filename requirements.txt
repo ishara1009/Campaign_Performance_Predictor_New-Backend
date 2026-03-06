@@ -1,0 +1,5 @@
+tensorflow-cpu==2.16.2
+numpy>=1.26,<2.0
+shap>=0.45.0
+lime>=0.2.0.1
+scikit-learn>=1.4.0

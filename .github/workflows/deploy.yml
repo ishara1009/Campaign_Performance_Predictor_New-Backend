@@ -1,0 +1,44 @@
+name: Deploy to Azure VM
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: SSH deploy to Azure VM
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          script: |
+            set -e
+
+            APP_DIR="$HOME/app"
+
+            # Clone the repo on first deployment
+            if [ ! -d "$APP_DIR/.git" ]; then
+              git clone https://github.com/ishara1009/Campaign_Performance_Predictor_New-Backend.git "$APP_DIR"
+            fi
+
+            cd "$APP_DIR"
+
+            # Pull latest changes from main
+            git fetch origin main
+            git reset --hard origin/main
+
+            # Rebuild and restart containers (zero-downtime rolling update)
+            docker compose down --remove-orphans
+            docker compose build --no-cache
+            docker compose up -d
+
+            # Remove unused images to free disk space
+            docker image prune -f
+
+            echo "Deployment complete at $(date)"
