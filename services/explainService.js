@@ -301,7 +301,7 @@ JSON SCHEMA:
     "friction_points": "What specific psychological barriers prevent users from engaging? List each friction point with the exact element in the caption/content causing it (e.g. 'No urgency word — reader can delay action indefinitely')",
     "desired_action": "What action does the post want the reader to take? Is the post explicitly and clearly asking for it? Quote the CTA or explain why it is absent.",
     "cognitive_load": "How much mental effort is required to understand and act on this post? Is the message clear in under 3 seconds? Reference specific complex phrases if any.",
-    "emotional_hook": "What emotion does this post evoke? (excitement, trust, curiosity, desire, community) Is this the optimal emotion for driving ${metric} engagement on ${platform}? Quote the emotional trigger words."
+    "emotional_hook": "What emotion does this post evoke? (excitement, trust, curiosity, desire, community) Is this the optimal emotion for driving \${metric} engagement on ${platform}? Quote the emotional trigger words."
   },
 
   "predicted_metrics_analysis": {
