@@ -1,6 +1,6 @@
 const { spawn } = require('child_process');
 const path = require('path');
-const supabase = require('../services/supabaseService');
+const Prediction = require('../models/Prediction');
 
 /**
  * POST /api/predict
@@ -32,38 +32,33 @@ async function runPrediction(req, res) {
 
     const prediction = await callPythonPredict(pythonPath, scriptPath, modelPath, inputPayload);
 
-    // Persist to Supabase
-    const { data: savedRow, error: dbErr } = await supabase
-      .from('predictions')
-      .insert([
-        {
-          caption: inputPayload.caption,
-          content: inputPayload.content,
-          platform: inputPayload.platform,
-          post_date: inputPayload.post_date,
-          post_time: inputPayload.post_time,
-          followers: inputPayload.followers,
-          ad_boost: inputPayload.ad_boost,
-          likes: prediction.likes,
-          comments: prediction.comments,
-          shares: prediction.shares,
-          clicks: prediction.clicks,
-          timing_quality_score: prediction.timing_quality_score,
-          created_at: new Date().toISOString(),
-        },
-      ])
-      .select()
-      .single();
-
-    if (dbErr) {
-      console.error('Supabase insert error:', dbErr.message);
+    // Persist to MongoDB
+    let savedId = null;
+    try {
+      const doc = await Prediction.create({
+        caption:              inputPayload.caption,
+        content:              inputPayload.content,
+        platform:             inputPayload.platform,
+        post_date:            inputPayload.post_date,
+        post_time:            inputPayload.post_time,
+        followers:            inputPayload.followers,
+        ad_boost:             inputPayload.ad_boost,
+        likes:                prediction.likes,
+        comments:             prediction.comments,
+        shares:               prediction.shares,
+        clicks:               prediction.clicks,
+        timing_quality_score: prediction.timing_quality_score,
+      });
+      savedId = doc._id.toString();
+    } catch (dbErr) {
+      console.error('MongoDB insert error:', dbErr.message);
       // Return prediction even if DB save fails
     }
 
     return res.json({
       success: true,
       prediction,
-      id: savedRow?.id || null,
+      id: savedId,
     });
   } catch (err) {
     console.error('Prediction error:', err.message);

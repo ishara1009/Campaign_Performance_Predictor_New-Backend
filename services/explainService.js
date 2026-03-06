@@ -19,28 +19,100 @@ const {
 const GROQ_ENDPOINT   = 'https://api.groq.com/openai/v1/chat/completions';
 const OPENAI_ENDPOINT = 'https://api.openai.com/v1/chat/completions';
 
-/* ─── Provider definitions (tried in order) ─────────────────────────────────*/
+/* ─── Provider definitions (tried in order) ─────────────────────────────────
+ *
+ * Key distribution:
+ *   KEY_1 / KEY  → same key — used for even-numbered slots
+ *   KEY_2        → separate key — used for odd-numbered slots
+ *
+ * 8b models are excluded: the prompt exceeds their per-request size limit (413).
+ * Each model occupies a separate Groq rate-limit bucket, so rotating models
+ * with the same key still provides fallback headroom.
+ * ─────────────────────────────────────────────────────────────────────────── */
 const PROVIDERS = [
   {
-    name:     'Groq-Primary',
-    url:      GROQ_ENDPOINT,
-    model:    'llama-3.3-70b-versatile',
-    getKey:   () => process.env.GROQ_API_KEY_1 || process.env.GROQ_API_KEY,
-    maxTokens: 3200,
+    // Slot 1 — KEY_1, 70b versatile (primary workhorse)
+    name:      'Groq-70b-K1',
+    url:       GROQ_ENDPOINT,
+    model:     'llama-3.3-70b-versatile',
+    getKey:    () => process.env.GROQ_API_KEY_1 || process.env.GROQ_API_KEY,
+    maxTokens: 8192,
+    timeout:   90000,
   },
   {
-    name:     'Groq-Fallback',
-    url:      GROQ_ENDPOINT,
-    model:    'llama-3.3-70b-versatile',
-    getKey:   () => process.env.GROQ_API_KEY_2,
-    maxTokens: 3200,
+    // Slot 2 — KEY_2, 70b versatile (separate quota)
+    name:      'Groq-70b-K2',
+    url:       GROQ_ENDPOINT,
+    model:     'llama-3.3-70b-versatile',
+    getKey:    () => process.env.GROQ_API_KEY_2,
+    maxTokens: 8192,
+    timeout:   90000,
   },
   {
-    name:     'OpenAI-GPT4o-mini',
-    url:      OPENAI_ENDPOINT,
-    model:    'gpt-4o-mini',
-    getKey:   () => process.env.OPENAI_API_KEY,
-    maxTokens: 3500,
+    // Slot 3 — KEY_1, llama3-70b (older model, different rate-limit bucket)
+    name:      'Groq-Llama3-70b-K1',
+    url:       GROQ_ENDPOINT,
+    model:     'llama3-70b-8192',
+    getKey:    () => process.env.GROQ_API_KEY_1 || process.env.GROQ_API_KEY,
+    maxTokens: 8192,
+    timeout:   90000,
+  },
+  {
+    // Slot 4 — KEY_2, llama3-70b
+    name:      'Groq-Llama3-70b-K2',
+    url:       GROQ_ENDPOINT,
+    model:     'llama3-70b-8192',
+    getKey:    () => process.env.GROQ_API_KEY_2,
+    maxTokens: 8192,
+    timeout:   90000,
+  },
+  {
+    // Slot 5 — KEY_1, Mixtral 8×7b (32k context, different bucket entirely)
+    name:      'Groq-Mixtral-K1',
+    url:       GROQ_ENDPOINT,
+    model:     'mixtral-8x7b-32768',
+    getKey:    () => process.env.GROQ_API_KEY_1 || process.env.GROQ_API_KEY,
+    maxTokens: 8192,
+    timeout:   90000,
+  },
+  {
+    // Slot 6 — KEY_2, Mixtral 8×7b
+    name:      'Groq-Mixtral-K2',
+    url:       GROQ_ENDPOINT,
+    model:     'mixtral-8x7b-32768',
+    getKey:    () => process.env.GROQ_API_KEY_2,
+    maxTokens: 8192,
+    timeout:   90000,
+  },
+  {
+    // Slot 7 — OpenAI gpt-4.1-nano: cheapest ($0.10/1M in · $0.40/1M out)
+    // ~$0.002 per call — use first to protect the $5 budget
+    name:      'OpenAI-4.1-nano',
+    url:       OPENAI_ENDPOINT,
+    model:     'gpt-4.1-nano',
+    getKey:    () => process.env.OPENAI_API_KEY,
+    maxTokens: 6000,   // cap output to limit cost; response still fits comfortably
+    timeout:   120000,
+  },
+  {
+    // Slot 8 — OpenAI gpt-4o-mini: ($0.15/1M in · $0.60/1M out)
+    // ~$0.003 per call — fallback if nano is rate-limited or unavailable
+    name:      'OpenAI-4o-mini',
+    url:       OPENAI_ENDPOINT,
+    model:     'gpt-4o-mini',
+    getKey:    () => process.env.OPENAI_API_KEY,
+    maxTokens: 6000,
+    timeout:   150000,
+  },
+  {
+    // Slot 9 — OpenAI gpt-4.1-mini: ($0.40/1M in · $1.60/1M out)
+    // ~$0.007 per call — only reached if both cheaper models fail
+    name:      'OpenAI-4.1-mini',
+    url:       OPENAI_ENDPOINT,
+    model:     'gpt-4.1-mini',
+    getKey:    () => process.env.OPENAI_API_KEY,
+    maxTokens: 6000,
+    timeout:   150000,
   },
 ];
 
@@ -65,7 +137,7 @@ async function callProvider(provider, messages, temperature) {
         Authorization: `Bearer ${key}`,
         'Content-Type': 'application/json',
       },
-      timeout: 55000,
+      timeout: provider.timeout || 90000,
     }
   );
 
@@ -75,18 +147,51 @@ async function callProvider(provider, messages, temperature) {
 
 /**
  * Tries each provider in order; returns the first successful result.
+ *
+ * Error-specific delays:
+ *   413 Payload Too Large  → skip immediately (no delay — model can't handle this prompt size)
+ *   429 Rate Limited       → respect Retry-After header, min 3 s, max 10 s
+ *   5xx / timeout          → 1 s pause before next attempt
+ *   Other                  → 500 ms pause
  */
-async function callWithFallback(messages, temperature = 0.82) {
+async function callWithFallback(messages, temperature = 0.72) {
   let lastError;
+
   for (const provider of PROVIDERS) {
     try {
       console.log(`[explainService] Trying provider: ${provider.name}`);
       const result = await callProvider(provider, messages, temperature);
-      console.log(`[explainService] Success`);
+      console.log(`[explainService] Success with ${provider.name}`);
       return result;
     } catch (err) {
       lastError = err;
-      console.warn(`[explainService] ${provider.name} failed: ${err.message}`);
+      const status   = err.response?.status;
+      const errMsg   = err.message || '';
+      console.warn(`[explainService] ${provider.name} failed (${status || 'no-status'}): ${errMsg}`);
+
+      if (status === 413) {
+        // Payload too large — this model can never handle the prompt; skip immediately
+        continue;
+      }
+
+      if (status === 429) {
+        // Rate-limited — honour Retry-After if present, else back off progressively
+        const retryAfterSec = parseInt(err.response?.headers?.['retry-after'] || '0', 10);
+        const waitMs        = retryAfterSec > 0
+          ? Math.min(retryAfterSec * 1000, 10_000)
+          : 3_000;   // default 3 s when header is absent
+        console.log(`[explainService] Rate-limited — waiting ${waitMs}ms before next provider`);
+        await new Promise((r) => setTimeout(r, waitMs));
+        continue;
+      }
+
+      if (status >= 500 || errMsg.includes('timeout')) {
+        await new Promise((r) => setTimeout(r, 1_000));
+        continue;
+      }
+
+      // Other errors (400, 401, network, etc.) — short pause
+      await new Promise((r) => setTimeout(r, 500));
     }
   }
   throw new Error(`All AI providers failed. Last error: ${lastError?.message}`);
@@ -649,21 +754,12 @@ JSON SCHEMA:
 }`;
 
   // ── Call AI with fallback chain ─────────────────────────────────────────────
-  let parsed;
-  try {
-    const messages = [
-      { role: 'system', content: systemPrompt },
-      { role: 'user',   content: userPrompt },
-    ];
-    parsed = await callWithFallback(messages, 0.82);
-  } catch (err) {
-    console.error('[explainService] All providers failed:', err.message);
-    parsed = {
-      overall_assessment: 'AI explanation service is temporarily unavailable. Please try again shortly.',
-      performance_level: 'Moderate',
-      improvements: [],
-    };
-  }
+  // Errors propagate to the controller so nothing gets saved on failure
+  const messages = [
+    { role: 'system', content: systemPrompt },
+    { role: 'user',   content: userPrompt },
+  ];
+  const parsed = await callWithFallback(messages, 0.72);
 
   // ── Enforce dataset-computed peak times (never let LLM override) ──────────
   if (parsed.peak_times_analysis) {
