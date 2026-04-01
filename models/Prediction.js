@@ -11,7 +11,7 @@ const PredictionSchema = new mongoose.Schema(
     followers: { type: Number, required: true },
     ad_boost:  { type: Number, default: 0 },
 
-    // Prediction outputs
+    // Prediction outputs.
     likes:                { type: Number },
     comments:             { type: Number },
     shares:               { type: Number },
