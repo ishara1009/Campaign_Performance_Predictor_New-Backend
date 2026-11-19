@@ -1,4 +1,4 @@
-# Campaign Performance Predictor — Backend
+# Campaign Performance Predictor - Backend
 
 Node.js/Express backend for the AI-powered social media campaign performance predictor. It serves REST API endpoints for engagement prediction, AI explanations, SHAP/LIME explainability, image text extraction, and prediction history. Python inference scripts power the deep learning models (Transformer, BiGRU, BiLSTM).
 
